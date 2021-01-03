@@ -1,8 +1,12 @@
 import discord
 import sys
+from discord.ext import commands
+
+description = 'use "*spoiler" to spoiler file or "*spoiler <text> "' + \
+              'to include text as well!'
 
 
-class SpoilerBot(discord.Client):
+class SpoilerBot(commands.Cog):
     async def spoiler_attachments(self, attachments):
         files = []
         for attachment in attachments:
@@ -11,17 +15,15 @@ class SpoilerBot(discord.Client):
             files.append(f)
         return files
 
-    async def on_message(self, message):
-        # Determine whether user is trying to use *spoiler
-        content = message.content
-        is_spoiler_command = (content.lower().startswith("*spoiler ") or
-                              content == "*spoiler")
-        # Check if *spioler and if there are any attachments anyways
-        if is_spoiler_command and len(message.attachments):
+    @commands.command()
+    async def spoiler(self, ctx, text: str = ""):
+        message = ctx.message
+        if len(message.attachments):
+            message = ctx.message
             attachments = message.attachments
             channel = message.channel
             files = await self.spoiler_attachments(attachments)
-            text = content[9:]
+            text = message.content[9:]
 
             # Checks if the message wasn't in DMs
             if not isinstance(channel, discord.DMChannel):
@@ -39,5 +41,7 @@ if __name__ == "__main__":
         print("Please call spoiler_bot with <token>")
         exit(0)
 
-    sb = SpoilerBot()
-    sb.run(sys.argv[1])
+    bot = commands.Bot(command_prefix='*', description=description)
+    bot.add_cog(SpoilerBot(bot))
+
+    bot.run(sys.argv[1])
