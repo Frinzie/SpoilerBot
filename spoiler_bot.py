@@ -12,16 +12,21 @@ class SpoilerBot(discord.Client):
         return files
 
     async def on_message(self, message):
-        if ((message.content.lower().startswith("*spoiler ") or message.content == "*spoiler")
-                and len(message.attachments)):
+        # Determine whether user is trying to use *spoiler
+        content = message.content
+        is_spoiler_command = (content.lower().startswith("*spoiler ") or
+                              content == "*spoiler")
+        # Check if *spioler and if there are any attachments anyways
+        if is_spoiler_command and len(message.attachments):
             attachments = message.attachments
             channel = message.channel
             files = await self.spoiler_attachments(attachments)
-            text = message.content[9:]
+            text = content[9:]
 
+            # Checks if the message wasn't in DMs
             if not isinstance(channel, discord.DMChannel):
-                await message.delete()
                 user_mention = message.author.mention
+                await message.delete()
                 text = user_mention + ": " + text
                 await channel.send(text, files=files)
             else:
